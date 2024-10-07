@@ -1,0 +1,457 @@
+# Function_s1_Dataframe_generator
+
+# Preparation
+1. Create base dataframe
+2. Populate it with the desired number of rows
+3. Define variables:
+   - Concrete strength
+   - Density of concrete
+   - DensiAty of steel, etc.
+
+# Create function
+Create a function named “prob_data“ to generate data based on distribution graph variables.
+
+# Create original data
+Use the prob_data function to add the following columns to the dataframe:
+   - Lengths of the beams
+   - Depths
+   - Concrete strength
+   - Steel strength
+   Place random values for widths and reinforcement ratios.
+   Assign random warehouse names.
+
+# Calculate data based on the original data
+Calculate the attributes of each beam according to the original data.
+Calculate:
+   - Area
+   - Volume
+   - Weight
+   - Load, etc.
+
+# Calculate behavior
+Calculate the behavior of the beams based on static structural design rules.
+Calculate:
+   - Max moment due to self-weight
+   - Shear load due to self-weight
+   - Required area of steel
+
+# Filter beams that don’t comply with structural design requirements
+Delete rows where (beam depth < length / 12) < 0.1.
+Delete rows if the moment due to self-weight > (0.167 * concrete strength * width * depth^2).
+
+# Export generated Dataframe to a CSV file
+
+
+
+
+
+s2_Dataframe_to_dictionary
+
+## lengths_into_groups
+
+### Inputs:
+1. DataFrame with ‘lengths.’
+2. Tolerance for merging lengths.
+
+### Outputs:
+List of length groups.
+
+1. Sort lengths.
+2. Create empty groups list.
+3. For each length, merge or create a new group.
+4. Calculate group statistics.
+5. Merge groups based on conditions.
+6. Convert to unique beam_groups.
+7. Write to “beam_groups.csv”.
+8. Return beam_groups.
+
+## dataframe_to_dictionary
+
+### Inputs:
+1. DataFrame with beam data.
+2. Tolerance for merging lengths.
+
+### Outputs:
+Dictionary with grouped beam data.
+
+1. Get beam_groups using lengths_into_groups.
+2. Create empty dict_list.
+3. For each group in beam_groups:
+   a. Create a dictionary with ‘ID,’ ‘LENGTH,’ ‘SIZE,’ and ‘DATAFRAME.’
+   b. Add relevant values.
+4. Calculate average_size.
+5. Create new_dict_list.
+6. For each group in dict_list:
+   a. If size > average_size, add to new_dict_list.
+7. Return new_dict_list.
+
+
+
+
+
+s3_axial_combinations
+#Inputs:
+    Dictionary representing groups of data (beam lengths):
+    - dict_list 
+    - Length of the axis.
+    - Tolerance of length.
+    - Column size.
+#This function generates combinations of lengths for a given axis, considering constraints and tolerances.
+	1.Subtract the column size from the axis length.
+	2.Set upper and lower limits based on axis length and tolerance.
+	3.Initialize a list to store combinations.
+	4.Iterate through combinations of beam lengths:
+    		a. For each combination, calculate the sum of lengths.
+		b. Check if the sum fits within the grid’s length constraints.
+		c. If not, adjust the combination by adding more of the first beam until it fits.
+		d. Check if the adjusted combination fits within tolerance constraints.
+		e. Append the valid combination to the list of combinations.
+	5.Remove duplicate combinations.
+	6.Return the list of unique combinations.
+This function essentially provides combinations of beam lengths that fit within specified constraints and tolerances for both ‘x’ and ‘y’ axes.
+
+
+
+
+
+
+s4_Possible_grid_combinations
+#This function generates possible 2D grids by combining beam lengths for both ‘x’ and ‘y’ axes.
+    1. Initialize an empty dictionary to store grid combinations.
+    2. Iterate through each combination of ‘x’ and ‘y’:
+	    a. Create a grid dictionary for each combination.
+	    b. Assign unique identifiers to each grid (e.g., ‘grid_1’).
+	    c. Store ‘x’ and ‘y’ values in the grid dictionary.
+	    d. Calculate the number of beams for ‘x’ and ‘y’ based on the length of the other axis.
+	    e. Initialize a dictionary to store the quantity of each beam type in the grid.
+	    f. Iterate through selected keys (‘beams_of_x’ and ‘beams_of_y’):
+	    i. Count the occurrences of each beam type and store the quantity in the grid dictionary.
+    3. Append the grid dictionary to the list_comb dictionary.
+    4. Repeat the process for all combinations.
+    5. Return the list_comb dictionary containing information about each generated grid.
+
+
+
+
+
+
+s5_Grid_attributes_generation
+find_amount_of_houses Function:
+        1. Iterate through each grid in list_comb.
+        2. For each beam type in the grid, calculate the amount of that beam type needed.
+        3. Calculate the minimum possible houses based on the beam requirements.
+        4. Return a dictionary (result) containing the calculated amounts for each grid and the total amount of houses.
+
+find_grids_optimized_for_house Function:
+        1. Calculate the average amount of houses.
+        2. Filter out grids where the amount of houses is less than the average.
+        3. Calculate the average number of columns.
+        4. Filter out grids where the number of columns is less than the average.
+        5. Return a dictionary (possible_grids) containing the optimized grids.
+
+The functions compare the beam requirements of each grid with the available beam types and calculate the optimal grids based on the average amount of houses and columns.
+#Outputs:
+	possible_grids = {
+    		‘grid_24’: { ‘amount_of_houses’: 2,
+        			      ‘x’: [‘B1’, ‘B1’, ‘B1’],
+        			      ‘y’: [‘B2’, ‘B2’],
+        			      ‘beams_of_x’: [‘B1’, ‘B1’, ‘B1’, ‘B1’, ‘B1’, ‘B1’],
+        			      ‘beams_of_y’: [‘B2’, ‘B2’, ‘B2’, ‘B2’, ‘B2’],
+        			      ‘group_quantities’: {‘B1’: total amount of B1s needed for grid, ‘B2’: total amount of B2s needed for grid},
+                                 ‘no.Columns’: calculated number of columns}}
+
+
+
+
+
+s6_tributary_load_area
+
+# Create function
+Create a function named “tributary_areas_x” to calculate the tributary loading areas of beams
+
+Create empty list “beam_load_x_all”
+loop in x:
+
+	# add zero length members so any x beams that are on the edge are loaded only by the areas inside the grid
+	z = ‘B0’ + y + ‘B0’
+	
+	loop in z:
+		define x1,y1, and y2 as the tallied length of a beam from the dictionary
+    		add condition for x1,y1, and y2 so column dimension is considered in edge case
+		add condition for x1,y1, and y2 so column dimension is considered for middle case
+	
+		# Calulate tributary areas
+		if x1 < y1:
+			area on x1 is a triangular area x**2/4
+		if x1 > y1:a
+			area on x1 is trapezoidal area (y1/4)*(2*x1-y1)
+			if y1 = column_width:
+				area = 0
+		if x1 = y1:
+			area on x1 is a triangular area x1*y1/4
+
+		
+		Repeat the same for y2 
+
+		Add both areas
+	
+	Append the list of areas for the beams
+
+
+
+	# Assigning a key to the loading area on x_beams
+	
+	for every beam in x,
+	create a dictionary called “trib_dict” where the key = alphabet + beam name and value = tributary area 
+
+
+	# Create function “tributary_areas_x_qty_by_length”
+	# This merges dictionaries if they belong to the same length group 
+
+	loop inside the trib_dict:
+		if the last two characters repeat:
+			# this means A-B4 and B-B4 will merge
+			merge both dictionaries
+
+
+# Create function “tributary_load_area”
+import possible grids
+import the beam dictionary 
+Create master_grid dictionary as an empty dictionary
+loop in grid:
+	loop in axis:
+		loop in beam:
+			calculate tributary_areas_x as trib_areas
+			calculate tributary_areas_x_qty_by_length as trib_areas_qty
+
+			Add trib_areas in grid_master as a dataframe showing the tributary area on each beam
+			Add trib_areas_qty in grid_master as dictionary showing quantity of beams for each area
+
+
+
+
+s8_static_analysis
+
+# Create a function “static_analysis”
+Define dead_load_per_square_meter as d_load_psqm
+
+rejected_beams = 0
+loop in grid in grid_master:
+	loop in axis:
+		loop in beam:
+			loop in area:
+				Calculate the applied moment
+				# Create a filter for the dataframe
+				condition =  applied moment > ultimate_bending_moment of stock beam
+				Filter the dataframe
+				
+				if any stock beams fulfill the condition:
+					add their IDs to id
+					add the number of items to qty
+
+					Add id in grid_master # id of structurally compatible beams
+					Add qty in grid_master # quantity of structurally compatible beams 
+
+				else:
+					increase quantity of rejected beams by 1
+ 
+
+
+# Create a function “refining_the_selection”
+# This function removes repeating stock ids from every grid such that all stock ids are unique
+
+loop in grid in grid_master:
+	merge the x and y dictionary for structurally compatible ids
+	loop in axis:
+		loop in beam:
+			remove repeating stock ids
+			loop in area:
+				
+				Add updated id in grid_master
+				Add updated qty in grid_master
+
+
+
+
+
+
+
+s9_place_no_columns_and_self_weight_version_2
+
+# Some null dictionaries are left which need to be removed
+
+make a copy of the master grid  because the loop will be broken if the size of the dictionary being looped is changed
+
+loop in grid:
+	loop in axis:
+		loop in beam:
+			if beam is not found in the original master grid:
+			# so it is a null dictionary and should not be there
+
+			delete the dictionary
+				
+
+
+# calculate the number of columns
+
+loop in grid:
+	column quantity = (qty of beams in x_axis +1)* (qty of beams in 					   y_axis +1) 
+
+
+# Solve for self-weight
+
+Sort the IDs of the main Dataframe sorted according to the weight
+
+loop in grid:
+	loop in axis:
+		loop in beam:
+			loop in area:
+				
+				calculate quantity of stock beams required 					for the given number of houses as q
+
+				sort the structurally compatible ids 						according to weight 
+
+				select the first q number of sorted ids
+
+				if required quantity of stock beams < 						available stock beams:
+  
+					boolean of missing beams is ‘yes’
+
+
+
+
+
+
+
+# Filter the grids with missing beams
+
+loop in grid:
+	if boolean of missing beams is ‘yes’:
+		filter the grids out
+
+
+
+
+
+
+
+s10_distance_from_warehouse_2
+
+# Create function “distance_from_warehouse”
+
+
+Sort the IDs of the main Dataframe sorted according to the weight
+
+loop in grid:
+	loop in warehouse_combinations:
+		loop in axis:
+			loop in beam:
+				loop in area:
+				
+					calculate qty of stock beams required for the given number of houses as q
+					
+					Filter out all the ids that do not belong to any warehouse in warehouse_						combinations
+					
+					sort the structurally compatible ids according to weight 	
+					
+					select the first q number of sorted ids
+
+
+					loop in each warehouse inside the warehouse combination:
+
+						filter out any ids not in the warehouse
+					
+						sort the ids according to weight
+
+						calculate the self weight of all ids for each warehouse in each 							warehouse_combination
+	
+					if required quantity of stock beams < available stock beams:
+  
+						boolean of missing beams is ‘yes’
+
+
+# Finding total distance, weight, and number of trips for each warehouse combination
+
+loop in grid:
+	loop in warehouse_combinations:
+		loop in each warehouse inside the warehouse combination:
+			
+			Calculate the distance from warehouse to site
+
+			Calculate number of trips required per warehouse
+
+			Calulate the total distance traveled per warehouse 
+
+			Calculate the total distance for the warehouse_combination
+
+			Calculate the total weight for the warehouse_combination
+			
+
+# Create a function “grids_with_keys_as_objectives”
+
+Create an empty dictionary “dict_objective_wh_comb”
+
+loop in grid:
+	Filter out grids with missing beams
+	loop in warehouse_combinations:
+		Save total distance to dict_objective_wh_comb”
+		Save total weight to dict_objective_wh_comb”
+
+
+
+
+
+s12_beam_distribution_for_best_grid
+
+Create function “beam_distribution_for_best_grid”
+   # DESCRIPTION: Makes a dictionary for the best grid. 
+
+    # INPUT: 
+    1) grid is a dictionary of a single grid.
+    it is one grid obtained from the master grid which contains only number 	    of grid. 
+    e.g grid = grid_p_master_3[‘grid_6803’] 
+
+    2) h is the number of houses
+
+    3) wh is the list of warehouses.
+    eg. wh = [‘Warehouse_1’,’Warehouse_2’,’Warehouse_4’,’Warehouse_5’,         	      ‘Warehouse_6’, ‘Warehouse_7’, ‘Warehouse_8’]
+
+    4) house_index is a list of all ids of houses
+    eg. house_index = [house_1, house_2, house_3, house_4, house_5]
+
+Create empty dictionary as grid_houses
+
+loop in the number of house_index:
+	loop in axis
+		loop in beam
+			loop in area
+
+				Calculate required quantity of beams per 					house as q
+			
+				sort the beams so the lightest, then heaviest  					is chosen so all houses have a moderate 						weight
+
+				select the first q number of sorted ids
+
+				Calculate the total weight for beams
+	
+				Save the selected beams to grid_houses_						dictionary				
+
+				Save the total weight to grid_houses 						dictionary
+
+				Save the width, depth, length, of each id to 					grid houses
+
+
+
+
+
+
+
+s14_Delete_beams
+Delete Beams Function (delete_beams_from_df):
+        1.The function takes a DataFrame (df) and a grid master data structure (best_grid).
+        2.It iterates through the grid master’s structure to find IDs (id_to_delete) associated with used beams.
+        3.For each ID, it locates the corresponding row in the DataFrame and deletes it.
+        4.If the ID is not found in the DataFrame, it skips the deletion.
+        5.The function does this for all IDs related to used beams in the specified grid.
+        6.The final DataFrame (df) no longer contains rows corresponding to the deleted beam IDs.
+The purpose of this code is to facilitate the removal of specific rows from a DataFrame based on beam IDs associated with a chosen grid in the grid master data.
